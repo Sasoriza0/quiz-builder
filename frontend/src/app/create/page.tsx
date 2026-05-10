@@ -1,90 +1,49 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
-
-interface Question {
-  type: 'boolean' | 'input' | 'checkbox';
-  text: string;
-  options: string[];
-}
+import { useCreateQuiz } from '@/hooks/useCreateQuiz';
 
 export default function CreateQuizPage() {
-  const router = useRouter();
-  const [title, setTitle] = useState('');
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const addQuestion = () => {
-    setQuestions([...questions, { type: 'boolean', text: '', options: [''] }]);
-  };
-
-  const updateQuestion = (index: number, field: keyof Question, value: any) => {
-    const updated = [...questions];
-    updated[index] = { ...updated[index], [field]: value };
-    setQuestions(updated);
-  };
-
-  const removeQuestion = (index: number) => {
-    setQuestions(questions.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  console.log("Sending data to backend:", { title, questions }); // Додай це!
-  
-  try {
-    const response = await api.post('/quizzes', { title, questions });
-    console.log("Backend response:", response.data);
-    router.push('/');
-  } catch (error: any) {
-    console.error("Full error object:", error); // Подивимось на повну помилку
-    alert('Error saving quiz. Check console.');
-  }
-};
+  const {
+    title,
+    setTitle,
+    questions,
+    isSubmitting,
+    addQuestion,
+    updateQuestion,
+    handleSubmit
+  } = useCreateQuiz();
 
   return (
-    <main className="min-h-screen bg-gray-900 text-gray-100 p-4 sm:p-8">
+    <main className="min-h-screen bg-gray-900 text-gray-100 p-4 sm:p-8 font-sans">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-extrabold mb-8 text-white border-b border-gray-700 pb-4">
-          Create New Quiz
-        </h1>
+        <h1 className="text-3xl font-extrabold mb-8 text-white">Create New Quiz</h1>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Title Card */}
-          <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-            <label className="block text-sm font-semibold mb-2 text-gray-300">Quiz Title</label>
+          <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+            <label htmlFor="quiz-title" className="block text-sm font-semibold mb-2 text-gray-300">
+              Quiz Title
+            </label>
             <input
+              id="quiz-title"
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-white"
-              placeholder="e.g., General Knowledge 101"
+              className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-white outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g., JavaScript Basics"
             />
           </div>
 
-          {/* Questions Section */}
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-200">Questions ({questions.length})</h2>
-            </div>
-
             {questions.map((q, index) => (
-              <div key={index} className="bg-gray-800 p-6 rounded-xl border border-gray-700 relative hover:border-gray-500 transition shadow-md">
-                <button
-                  type="button"
-                  onClick={() => removeQuestion(index)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-red-400 transition"
-                >
-                  ✕
-                </button>
-
+              <div key={index} className="bg-gray-800 p-6 rounded-xl border border-gray-700 relative shadow-md">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="md:col-span-1">
-                    <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Type</label>
+                  <div>
+                    <label htmlFor={`type-${index}`} className="block text-xs font-bold uppercase text-gray-500 mb-1">
+                      Type
+                    </label>
                     <select
+                      id={`type-${index}`}
                       value={q.type}
                       onChange={(e) => updateQuestion(index, 'type', e.target.value)}
                       className="w-full p-2.5 bg-gray-900 border border-gray-600 rounded-lg text-white"
@@ -95,47 +54,87 @@ export default function CreateQuizPage() {
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Question Text</label>
+                    <label htmlFor={`text-${index}`} className="block text-xs font-bold uppercase text-gray-500 mb-1">
+                      Question Text
+                    </label>
                     <input
+                      id={`text-${index}`}
                       type="text"
                       required
                       value={q.text}
                       onChange={(e) => updateQuestion(index, 'text', e.target.value)}
                       className="w-full p-2.5 bg-gray-900 border border-gray-600 rounded-lg text-white"
-                      placeholder="What is the capital of..."
+                      placeholder="Enter your question here..."
                     />
                   </div>
                 </div>
 
-                {q.type === 'checkbox' && (
-                  <div className="pl-4 border-l-2 border-blue-500 space-y-2 mt-4">
-                    <label className="block text-xs font-bold uppercase text-gray-500">Options</label>
-                    {q.options.map((opt, optIndex) => (
-                      <input
-                        key={optIndex}
-                        type="text"
-                        value={opt}
-                        onChange={(e) => {
-                          const newOpts = [...q.options];
-                          newOpts[optIndex] = e.target.value;
-                          updateQuestion(index, 'options', newOpts);
-                        }}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-sm"
-                        placeholder={`Option ${optIndex + 1}`}
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newOpts = [...q.options, ''];
-                        updateQuestion(index, 'options', newOpts);
-                      }}
-                      className="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                <div className="mt-4 p-4 bg-gray-900/50 rounded-lg border border-blue-900/30">
+                  <label htmlFor={`correct-${index}`} className="block text-sm font-bold text-blue-400 mb-2">
+                    Correct Answer:
+                  </label>
+                  
+                  {q.type === 'boolean' && (
+                    <select
+                      id={`correct-${index}`}
+                      value={q.correctAnswer}
+                      onChange={(e) => updateQuestion(index, 'correctAnswer', e.target.value)}
+                      className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
                     >
-                      + Add another option
-                    </button>
-                  </div>
-                )}
+                      <option value="true">True</option>
+                      <option value="false">False</option>
+                    </select>
+                  )}
+
+                  {q.type === 'input' && (
+                    <input
+                      id={`correct-${index}`}
+                      type="text"
+                      required
+                      value={q.correctAnswer}
+                      onChange={(e) => updateQuestion(index, 'correctAnswer', e.target.value)}
+                      className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
+                      placeholder="Type the correct answer here..."
+                    />
+                  )}
+
+                  {q.type === 'checkbox' && (
+                    <div className="space-y-3">
+                      {q.options.map((opt, optIndex) => (
+                        <div key={optIndex} className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            aria-label={`Option ${optIndex + 1}`}
+                            value={opt}
+                            onChange={(e) => {
+                              const newOpts = [...q.options];
+                              newOpts[optIndex] = e.target.value;
+                              updateQuestion(index, 'options', newOpts);
+                            }}
+                            className="flex-1 p-2 bg-gray-800 border border-gray-600 rounded text-sm text-white"
+                            placeholder={`Option ${optIndex + 1}`}
+                          />
+                          <input
+                            type="radio"
+                            aria-label="Mark as correct"
+                            name={`correct-${index}`}
+                            checked={q.correctAnswer === opt && opt !== ''}
+                            onChange={() => updateQuestion(index, 'correctAnswer', opt)}
+                            className="w-5 h-5 accent-green-500"
+                            title="Mark as correct"
+                          />
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => updateQuestion(index, 'options', [...q.options, ''])}
+                        className="text-xs text-blue-400 hover:underline"
+                      >
+                        + Add Option
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -143,28 +142,18 @@ export default function CreateQuizPage() {
           <button
             type="button"
             onClick={addQuestion}
-            className="w-full py-4 border-2 border-dashed border-gray-600 rounded-xl text-gray-400 hover:border-blue-500 hover:text-blue-400 hover:bg-blue-900/10 transition flex items-center justify-center gap-2"
+            className="w-full py-4 border-2 border-dashed border-gray-600 rounded-xl text-gray-400 hover:border-blue-500 transition"
           >
-            <span className="text-xl">+</span> Add Question
+            + Add Question
           </button>
 
-          {/* Footer Actions */}
-          <div className="flex gap-4 pt-6 border-t border-gray-700">
+          <div className="flex gap-4 pt-6">
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`flex-1 py-3 px-6 rounded-lg font-bold transition shadow-lg ${
-                isSubmitting ? 'bg-gray-600' : 'bg-green-600 hover:bg-green-500'
-              } text-white`}
+              className="flex-1 bg-green-600 py-3 rounded-lg font-bold hover:bg-green-500 disabled:bg-gray-700 transition text-white"
             >
               {isSubmitting ? 'Saving...' : 'Save Quiz'}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push('/')}
-              className="px-8 py-3 bg-transparent border border-gray-600 rounded-lg hover:bg-gray-800 transition"
-            >
-              Cancel
             </button>
           </div>
         </form>
