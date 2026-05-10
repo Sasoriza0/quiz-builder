@@ -30,34 +30,43 @@ Follow these steps to run the project locally.
    cd backend
 
 2. Install dependencies:
-    ```npm install
+    ```bash
+    npm install
 
 3. Create a .env file from the provided template:
-    ```cp .env.example .env
+    ```bash
+    cp .env.example .env
 
 4. Synchronize the database schema (Prisma):
-    ```npx prisma db push
+    ```bash
+    npx prisma db push
 
 5. Populate the database with a sample quiz (recommended):
-    ```npx prisma db seed
+    ```bash
+    npx prisma db seed
 
 6. Start the development server:
-    ```npm run dev
+    ```bash
+    npm run dev
 
 The API will be available at http://localhost:4000
 
 ### 2. Frontend Setup
 
 1. Open a new terminal window and navigate to the frontend directory:
-    ```cd frontend
+    ```bash
+    cd frontend
 
 2. Install dependencies:
-    ```npm install
+    ```bash
+    npm install
 
 3. Create a .env.local file from the template:
-    ```cp .env.example .env.local
+    ```bash
+    cp .env.example .env.local
 
 4. Start the development server:
-    ```npm run dev
+    ```bash
+    npm run dev
 
 The application will be available at http://localhost:3000
