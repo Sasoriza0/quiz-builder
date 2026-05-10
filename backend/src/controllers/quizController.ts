@@ -27,6 +27,14 @@ export const createQuiz = async (req: Request, res: Response) => {
   try {
     const { title, questions } = req.body;
 
+    if (!title || title.trim().length < 3) {
+      return res.status(400).json({ error: 'Title is too short' });
+    }
+
+    if (!questions || questions.length === 0) {
+      return res.status(400).json({ error: 'Quiz must have at least one question' });
+    }
+
     const newQuiz = await prisma.quiz.create({
       data: {
         title,
@@ -34,7 +42,8 @@ export const createQuiz = async (req: Request, res: Response) => {
           create: questions.map((q: any) => ({
             type: q.type,
             text: q.text,
-            options: q.options ? JSON.stringify(q.options) : null
+            options: q.options ? JSON.stringify(q.options) : null,
+            correctAnswer: String(q.correctAnswer) 
           }))
         }
       },
@@ -43,6 +52,7 @@ export const createQuiz = async (req: Request, res: Response) => {
 
     res.status(201).json(newQuiz);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to create quiz' });
   }
 };
